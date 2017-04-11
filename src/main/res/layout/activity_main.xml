@@ -1,15 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context="com.zhoumushui.zygotepalette.MainActivity">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="Hello World!" />
+    <ImageView
+        android:id="@+id/imageTest"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:src="@drawable/test_zxq" />
 
-</RelativeLayout>
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2">
+
+        <TextView
+            android:id="@+id/textMuted"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MutedSwatch" />
+
+        <TextView
+            android:id="@+id/textVibrant"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textMuted"
+            android:layout_centerInParent="true"
+            android:text="VibrantSwatch" />
+
+        <TextView
+            android:id="@+id/textDarkMuted"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textVibrant"
+            android:layout_centerInParent="true"
+            android:text="DarkMutedSwatch" />
+
+        <TextView
+            android:id="@+id/textDarkVibrant"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textDarkMuted"
+            android:layout_centerInParent="true"
+            android:text="DarkVibrantSwatch" />
+
+        <TextView
+            android:id="@+id/textLightMuted"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textDarkVibrant"
+            android:layout_centerInParent="true"
+            android:text="LightMuted" />
+
+        <TextView
+            android:id="@+id/textLightVibrant"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/textLightMuted"
+            android:layout_centerInParent="true"
+            android:text="LightVibrant" />
+    </RelativeLayout>
+</LinearLayout>
