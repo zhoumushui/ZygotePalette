@@ -1,9 +1,12 @@
 package com.zhoumushui.zygotepalette;
 
+import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.graphics.Palette;
+import android.view.View;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
@@ -15,11 +18,21 @@ public class MainActivity extends AppCompatActivity {
     private TextView textLightMuted;
     private TextView textLightVibrant;
 
+    private Bitmap bitmap;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        initialLayout();
+
+        bitmap = ((BitmapDrawable) (getResources().getDrawable(R.drawable.test_zxq))).
+                getBitmap();
+        paletteBitmap(bitmap);
+    }
+
+    private void initialLayout() {
         textMuted = (TextView) findViewById(R.id.textMuted);
         textVibrant = (TextView) findViewById(R.id.textVibrant);
         textDarkMuted = (TextView) findViewById(R.id.textDarkMuted);
@@ -27,46 +40,56 @@ public class MainActivity extends AppCompatActivity {
         textLightMuted = (TextView) findViewById(R.id.textLightMuted);
         textLightVibrant = (TextView) findViewById(R.id.textLightVibrant);
 
-        Palette.from(((BitmapDrawable) (getResources().getDrawable(R.drawable.test_zxq))).
-                getBitmap()).generate(new Palette.PaletteAsyncListener() {
+        FloatingActionButton floatActionPalette = (FloatingActionButton)
+                findViewById(R.id.floatActionPalette);
+        floatActionPalette.setOnClickListener(myOnClickListener);
+    }
+
+    private View.OnClickListener myOnClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()) {
+                case R.id.floatActionPalette:
+                    if (bitmap != null)
+                        paletteBitmap(bitmap);
+                    break;
+            }
+        }
+    };
+
+
+    private void paletteBitmap(Bitmap bitmap) {
+        Palette.from(bitmap).generate(new Palette.PaletteAsyncListener() {
             @Override
             public void onGenerated(Palette palette) {
                 Palette.Swatch mutedSwatch = palette.getMutedSwatch();
-                if (mutedSwatch != null) {
-                    textMuted.setText("[MutedSwatch]\n" + mutedSwatch.toString());
-                    textMuted.setBackgroundColor(mutedSwatch.getRgb());
-                }
-                Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
-                if (vibrantSwatch != null) {
-                    textVibrant.setText("[VibrantSwatch]\n" + vibrantSwatch.toString());
-                    textVibrant.setBackgroundColor(vibrantSwatch.getRgb());
-                }
-                Palette.Swatch darkMutedSwatch = palette.getDarkMutedSwatch();
-                if (darkMutedSwatch != null) {
-                    textDarkMuted.setText("[DarkMutedSwatch]\n" +
-                            darkMutedSwatch.toString());
-                    textDarkMuted.setBackgroundColor(darkMutedSwatch.getRgb());
-                }
-                Palette.Swatch darkVibrantSwatch = palette.getDarkVibrantSwatch();
-                if (darkVibrantSwatch != null) {
-                    textDarkVibrant.setText("[DarkVibrantSwatch]\n" +
-                            darkVibrantSwatch.toString());
-                    textDarkVibrant.setBackgroundColor(darkVibrantSwatch.getRgb());
-                }
-                Palette.Swatch lightMutedSwatch = palette.getLightMutedSwatch();
-                if (lightMutedSwatch != null) {
-                    textLightMuted.setText("[LightMutedSwatch]\n" +
-                            lightMutedSwatch.toString());
-                    textLightMuted.setBackgroundColor(lightMutedSwatch.getRgb());
-                }
-                Palette.Swatch lightVibrantSwatch = palette.getLightVibrantSwatch();
-                if (textLightVibrant != null) {
-                    textLightVibrant.setText("[LightVibrantSwatch]\n" +
-                            lightVibrantSwatch.toString());
-                    textLightVibrant.setBackgroundColor(lightVibrantSwatch.getRgb());
-                }
+                updateTextBySwatch("Muted", textMuted, mutedSwatch);
 
+                Palette.Swatch vibrantSwatch = palette.getVibrantSwatch();
+                updateTextBySwatch("Vibrant", textVibrant, vibrantSwatch);
+
+                Palette.Swatch darkMutedSwatch = palette.getDarkMutedSwatch();
+                updateTextBySwatch("DarkMuted", textDarkMuted, darkMutedSwatch);
+
+                Palette.Swatch darkVibrantSwatch = palette.getDarkVibrantSwatch();
+                updateTextBySwatch("DarkVibrant", textDarkVibrant, darkVibrantSwatch);
+
+                Palette.Swatch lightMutedSwatch = palette.getLightMutedSwatch();
+                updateTextBySwatch("LightMuted", textLightMuted, lightMutedSwatch);
+
+                Palette.Swatch lightVibrantSwatch = palette.getLightVibrantSwatch();
+                updateTextBySwatch("LightVibrant", textLightVibrant, lightVibrantSwatch);
             }
         });
+    }
+
+    private void updateTextBySwatch(String title, TextView textView, Palette.Swatch swatch) {
+        if (swatch != null) {
+            textView.setBackgroundColor(swatch.getRgb());
+            textView.setText(title + "\n[RGB:#" + Integer.toHexString(swatch.getRgb())
+                    + "]\t[Population:" + swatch.getPopulation() + "]");
+        } else
+            textView.setText(title + " swatch is NULL");
     }
 }
