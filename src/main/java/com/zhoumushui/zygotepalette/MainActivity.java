@@ -1,7 +1,10 @@
 package com.zhoumushui.zygotepalette;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -9,19 +12,27 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.graphics.Palette;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.zhoumushui.zygotepalette.util.HintUtil;
 
 import java.lang.ref.WeakReference;
 
 public class MainActivity extends AppCompatActivity {
 
     private Context context;
+
+    private static final String[] PERMISSION_EXTERNAL_STORAGE = new String[]{
+            Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
+    private static final int REQUEST_EXTERNAL_STORAGE = 100;
 
     private TextView textMuted;
     private TextView textVibrant;
@@ -30,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView textLightMuted;
     private TextView textLightVibrant;
 
+    private ImageView imageTest;
     private Bitmap bitmap;
 
     private static final int REQUEST_PICK_IMAGE = 0x31;
@@ -61,10 +73,18 @@ public class MainActivity extends AppCompatActivity {
             int width = cursor.getInt(cursor.getColumnIndex(filePathColumn[1]));
             int height = cursor.getInt(cursor.getColumnIndex(filePathColumn[2]));
             cursor.close();
-            // path:/storage/emulated/0/DCIM/test.png
-            textMuted.setText(width + "x" + height + "path:" + path);
-//            paletteBitmap(pathToBitmap(path, width, height));
-//            paletteBitmap(BitmapFactory.decodeFile("file://" + path));
+            if (width > 0 && height > 0) {
+            } else {
+                width = 800;
+                height = 800;
+            }
+            bitmap = pathToBitmap(path, width, height); // path:/storage/emulated/0/DCIM/test.png
+
+            if (bitmap != null) {
+                imageTest.setImageBitmap(bitmap);
+                paletteBitmap(pathToBitmap(path, width, height));
+            } else
+                HintUtil.showToast(context, "bitmap is NULL");
         }
     }
 
@@ -78,9 +98,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_pick:
-                Intent intentPick = new Intent(Intent.ACTION_PICK,
-                        android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(intentPick, REQUEST_PICK_IMAGE);
+                pickImageAndPalette();
                 break;
         }
         return true;
@@ -94,9 +112,24 @@ public class MainActivity extends AppCompatActivity {
         textLightMuted = (TextView) findViewById(R.id.textLightMuted);
         textLightVibrant = (TextView) findViewById(R.id.textLightVibrant);
 
+        imageTest = (ImageView) findViewById(R.id.imageTest);
+
         FloatingActionButton floatActionPalette = (FloatingActionButton)
                 findViewById(R.id.floatActionPalette);
         floatActionPalette.setOnClickListener(myOnClickListener);
+    }
+
+    private void pickImageAndPalette() {
+        int permissionWrite = ActivityCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permissionWrite != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    PERMISSION_EXTERNAL_STORAGE, REQUEST_EXTERNAL_STORAGE);
+        } else {
+            Intent intentPick = new Intent(Intent.ACTION_PICK,
+                    android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            startActivityForResult(intentPick, REQUEST_PICK_IMAGE);
+        }
     }
 
     private View.OnClickListener myOnClickListener = new View.OnClickListener() {
@@ -105,8 +138,7 @@ public class MainActivity extends AppCompatActivity {
         public void onClick(View v) {
             switch (v.getId()) {
                 case R.id.floatActionPalette:
-                    if (bitmap != null)
-                        paletteBitmap(bitmap);
+                    pickImageAndPalette();
                     break;
             }
         }
@@ -147,23 +179,31 @@ public class MainActivity extends AppCompatActivity {
             textView.setText(title + " swatch is NULL");
     }
 
-    public Bitmap pathToBitmap(String path, int w, int h) {
-        BitmapFactory.Options opts = new BitmapFactory.Options();
-        opts.inJustDecodeBounds = true; // 设置为ture只获取图片大小
-        opts.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        BitmapFactory.decodeFile(path, opts); // 返回为空
-        int width = opts.outWidth;
-        int height = opts.outHeight;
+    /**
+     * 从图片路径获取Bitmap
+     *
+     * @param path
+     * @param wantWidth
+     * @param wantHeight
+     * @return
+     */
+    public Bitmap pathToBitmap(String path, int wantWidth, int wantHeight) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true; // 设置为ture只获取图片大小
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        BitmapFactory.decodeFile(path, options); // 返回为空
+        int realWidth = options.outWidth;
+        int readlHeight = options.outHeight;
         float scaleWidth = 0.f, scaleHeight = 0.f;
-        if (width > w || height > h) { // 缩放
-            scaleWidth = ((float) width) / w;
-            scaleHeight = ((float) height) / h;
+        if (realWidth > wantWidth || readlHeight > wantHeight) { // 缩放
+            scaleWidth = ((float) realWidth) / wantWidth;
+            scaleHeight = ((float) readlHeight) / wantHeight;
         }
-        opts.inJustDecodeBounds = false;
+        options.inJustDecodeBounds = false;
         float scale = Math.max(scaleWidth, scaleHeight);
-        opts.inSampleSize = (int) scale;
-        WeakReference<Bitmap> weak = new WeakReference<Bitmap>(BitmapFactory.decodeFile(path, opts));
-        return Bitmap.createScaledBitmap(weak.get(), w, h, true);
+        options.inSampleSize = (int) scale;
+        WeakReference<Bitmap> weak = new WeakReference<>(BitmapFactory.decodeFile(path, options));
+        return Bitmap.createScaledBitmap(weak.get(), wantWidth, wantHeight, true);
     }
 
 }
