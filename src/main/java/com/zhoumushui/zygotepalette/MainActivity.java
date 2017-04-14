@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -175,8 +176,10 @@ public class MainActivity extends AppCompatActivity {
             textView.setBackgroundColor(swatch.getRgb());
             textView.setText(title + "\n[RGB:#" + Integer.toHexString(swatch.getRgb())
                     + "]\t[Population:" + swatch.getPopulation() + "]");
-        } else
+        } else {
+            textView.setBackgroundColor(Color.WHITE);
             textView.setText(title + " swatch is NULL");
+        }
     }
 
     /**
